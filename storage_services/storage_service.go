@@ -6,13 +6,13 @@ import (
 	"github.com/zapscloud/golib-utils/utils"
 )
 
-// AppClientDao - User DAO Repository
+// StorageService - Storage Service
 type StorageService interface {
 	InitializeStorageService(props utils.Map) error
 	GetSignedURL(method string, fileKey string) (string, error)
 }
 
-// NewAppClientDao - Contruct User Dao
+// NewStorageService - Contruct Storage Service
 func NewStorageService(props utils.Map) (StorageService, error) {
 	var storageClient StorageService = nil
 

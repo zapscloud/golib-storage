@@ -16,7 +16,7 @@ import (
 	"github.com/zapscloud/golib-utils/utils"
 )
 
-// AppointmentServices - Customer Appointment Service structure
+// AWSStorageServices - AWS Storage Service structure
 type AWSStorageServices struct {
 	awsS3Region  string
 	awsS3Bucket  string

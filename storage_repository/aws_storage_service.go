@@ -108,9 +108,10 @@ func (p *AWSStorageServices) UploadFile(fileName string, fileKey string) (string
 
 	f, err := os.Open(fileName)
 	if err != nil {
-		log.Println("failed to open file ", fileName, err)
+		log.Println("golib-storage::UploadFile::failed to open file ", fileName, err)
 		return "", "", err
 	}
+	defer f.Close()
 
 	// Upload the file to S3.
 	result, err := uploader.Upload(&s3manager.UploadInput{
@@ -120,13 +121,44 @@ func (p *AWSStorageServices) UploadFile(fileName string, fileKey string) (string
 	})
 
 	if err != nil {
-		log.Println("failed to upload file", err)
+		log.Println("golib-storage::UploadFile::failed to upload file", err)
 		return "", "", err
 	}
 
-	log.Println("file uploaded to => ", result.Location)
+	log.Println("golib-storage::UploadFile::file uploaded to => ", result.Location)
 
 	return fileKey, result.Location, nil
+}
+
+func (p *AWSStorageServices) DownloadFile(fileName string, fileKey string) error {
+
+	// The session the S3 Uploader will use
+	sess := session.Must(p.createNewSession())
+
+	// Create a downloader with the session and default options
+	downloader := s3manager.NewDownloader(sess)
+
+	f, err := os.Create(fileName)
+	if err != nil {
+		log.Println("golib-storage::DownloadFile::failed to open file ", fileName, err)
+		return err
+	}
+	defer f.Close()
+
+	// Upload the file to S3.
+	n, err := downloader.Download(f, &s3.GetObjectInput{
+		Bucket: aws.String(p.awsS3Bucket),
+		Key:    aws.String(fileKey),
+	})
+
+	if err != nil {
+		log.Println("golib-storage::DownloadFile::failed to upload file", err)
+		return err
+	}
+
+	log.Println("golib-storage::DownloadFile::file downloaded to => ", fileName, n)
+
+	return nil
 }
 
 func (p *AWSStorageServices) createNewSession() (*session.Session, error) {

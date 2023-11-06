@@ -10,6 +10,7 @@ import (
 type StorageService interface {
 	InitializeStorageService(props utils.Map) error
 	GetSignedURL(method string, fileKey string) (string, error)
+	UploadFile(fileName string, fileKey string) (string, string, error)
 }
 
 // NewStorageService - Contruct Storage Service

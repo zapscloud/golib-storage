@@ -4,6 +4,7 @@ package storage_repository
 
 import (
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/zapscloud/golib-storage/storage_common"
 	"github.com/zapscloud/golib-utils/utils"
 )
@@ -59,20 +61,15 @@ func (p *AWSStorageServices) GetSignedURL(method string, fileKey string) (string
 		return "", err
 	}
 
-	// Assign Credentials
-	s3Creds := credentials.NewStaticCredentials(p.awsAccessKey, p.awsSecretKey, "")
-	// Create Configuration
-	s3Cfg := aws.NewConfig().WithRegion(p.awsS3Region).WithCredentials(s3Creds)
-
 	// Create New Session
-	sess, err := session.NewSession(s3Cfg)
+	sess, err := p.createNewSession()
 	if err != nil {
 		log.Println("Error while creating NewSession:: ", err)
 		err := &utils.AppError{ErrorStatus: 400, ErrorMsg: "Error while creating NewSession", ErrorDetail: err.Error()}
 		return "", err
 	}
-	var req *request.Request
 
+	var req *request.Request
 	// Create S3 service client
 	svc := s3.New(sess)
 
@@ -96,6 +93,48 @@ func (p *AWSStorageServices) GetSignedURL(method string, fileKey string) (string
 		err := &utils.AppError{ErrorStatus: 400, ErrorMsg: "Error while presign", ErrorDetail: err.Error()}
 		return "", err
 	}
+
 	// Everything success, return the url
 	return urlStr, nil
+}
+
+func (p *AWSStorageServices) UploadFile(fileName string, fileKey string) (string, string, error) {
+
+	// The session the S3 Uploader will use
+	sess := session.Must(p.createNewSession())
+
+	// Create an uploader with the session and default options
+	uploader := s3manager.NewUploader(sess)
+
+	f, err := os.Open(fileName)
+	if err != nil {
+		log.Println("failed to open file ", fileName, err)
+		return "", "", err
+	}
+
+	// Upload the file to S3.
+	result, err := uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(p.awsS3Bucket),
+		Key:    aws.String(fileKey),
+		Body:   f,
+	})
+
+	if err != nil {
+		log.Println("failed to upload file", err)
+		return "", "", err
+	}
+
+	log.Println("file uploaded to => ", result.Location)
+
+	return fileKey, result.Location, nil
+}
+
+func (p *AWSStorageServices) createNewSession() (*session.Session, error) {
+	// Assign Credentials
+	s3Creds := credentials.NewStaticCredentials(p.awsAccessKey, p.awsSecretKey, "")
+	// Create Configuration
+	s3Cfg := aws.NewConfig().WithRegion(p.awsS3Region).WithCredentials(s3Creds)
+
+	// Create New Session
+	return session.NewSession(s3Cfg)
 }

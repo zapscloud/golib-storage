@@ -10,7 +10,7 @@ import (
 type StorageService interface {
 	InitializeStorageService(props utils.Map) error
 	GetSignedURL(method string, fileKey string) (string, error)
-	UploadFile(fileName string, fileKey string) (string, string, error)
+	UploadFile(fileName string, fileKey string, contentType string) (string, string, error)
 	DownloadFile(fileName string, fileKey string) error
 }
 

@@ -98,7 +98,7 @@ func (p *AWSStorageServices) GetSignedURL(method string, fileKey string) (string
 	return urlStr, nil
 }
 
-func (p *AWSStorageServices) UploadFile(fileName string, fileKey string) (string, string, error) {
+func (p *AWSStorageServices) UploadFile(fileName string, fileKey string, contentType string) (string, string, error) {
 
 	// The session the S3 Uploader will use
 	sess := session.Must(p.createNewSession())
@@ -113,11 +113,17 @@ func (p *AWSStorageServices) UploadFile(fileName string, fileKey string) (string
 	}
 	defer f.Close()
 
+	// Check ContentType
+	if utils.IsEmpty(contentType) {
+		contentType = storage_common.DEFAULT_CONTENT_TYPE
+	}
+
 	// Upload the file to S3.
 	result, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(p.awsS3Bucket),
-		Key:    aws.String(fileKey),
-		Body:   f,
+		Bucket:      aws.String(p.awsS3Bucket),
+		Key:         aws.String(fileKey),
+		Body:        f,
+		ContentType: aws.String(contentType),
 	})
 
 	if err != nil {

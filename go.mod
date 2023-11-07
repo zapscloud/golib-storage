@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/aws/aws-sdk-go v1.44.183
-	github.com/zapscloud/golib-utils v1.0.0
+	github.com/zapscloud/golib-utils v1.0.1-0.20231013125100-bb65f5737443
 )
 
 require (

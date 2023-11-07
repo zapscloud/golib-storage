@@ -28,6 +28,11 @@ const (
 	GET_OBJECT = "GET"
 )
 
+// Default values
+const (
+	DEFAULT_CONTENT_TYPE = "image/png"
+)
+
 func GetStorageType(props utils.Map) (StorageType, error) {
 
 	dataVal, dataOk := props[STORAGE_TYPE]
